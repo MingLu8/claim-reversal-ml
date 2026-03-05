@@ -8,42 +8,23 @@ import joblib
 import os
 
 def main():
-    # 1. Generate data
-    df = generate_claims(n=10000)
-    print(df.dtypes)
-    print(df.head())
-    # 2. Split features and label
+    df = generate_claims(n=1000, seed=42)
     X, y = get_features_and_target(df)
-
-    # 3. Train/test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    # 4. Build model
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = build_model(X_train)
-
-    # 5. Train
     model.fit(X_train, y_train)
     os.makedirs("models", exist_ok=True)
-    model_path = "models/reversal_model.joblib"
+    model_path = os.path.join("models", "claim_reversal_model.joblib")
     joblib.dump(model, model_path)
     
+    pred = model.predict_proba(X_test)[:, 1]
+    auc = roc_auc_score(y_test, pred)
+    print(f"Test AUC: {auc:.4f}")
+    
     loaded_model = joblib.load(model_path)
-    preds_loaded  = loaded_model.predict_proba(X_test)[:, 1]
+    loaded_pred = loaded_model.predict_proba(X_test)[:, 1]
+    difference = (pred - loaded_pred).max()
+    print(f"Max difference in predictions: {difference}")
     
-    X_transformed = model.named_steps["preprocessor"].transform(X_train)
-    print("Transformed shape:", X_transformed.shape)
-    # 6. Predict probabilities
-    preds = model.predict_proba(X_test)[:, 1]
-    difference = (preds - preds_loaded).max()
-    
-    print("Max prediction difference after reload:", difference)
-    
-    # 7. Evaluate
-    auc = roc_auc_score(y_test, preds)
-
-    print(f"ROC-AUC: {auc:.4f}")
-
 if __name__ == "__main__":
     main()
