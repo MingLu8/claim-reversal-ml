@@ -1,0 +1,14 @@
+@baseUrl = http://localhost:8000
+@repeat = 1
+
+POST {{baseUrl}}/predict-reversal
+Content-Type: application/json
+
+{
+  "ingredient_cost": 120.50,
+  "copay_amount": 20,
+  "days_supply": 30,
+  "pharmacy_historical_reversal_rate": 0.18,
+  "pharmacy_type": "Retail",
+  "drug_tier": "Generic"
+}
